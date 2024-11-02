@@ -47,3 +47,21 @@ class TestSpreadSheet(TestCase):
         spreadsheet = SpreadSheet()
         spreadsheet.set("A1", "=1.5")
         self.assertEqual("#Error", spreadsheet.evaluate("A1"))
+
+    def test_spreadsheet_evaluate_formula_with_reference(self):
+        spreadsheet = SpreadSheet()
+        spreadsheet.set("B1", "42")
+        spreadsheet.set("A1", "=B1")
+        self.assertEqual(42, spreadsheet.evaluate("A1"))
+
+    def test_spreadsheet_evaluate_formula_with_reference_to_float(self):
+        spreadsheet = SpreadSheet()
+        spreadsheet.set("B1", "42.5")
+        spreadsheet.set("A1", "=B1")
+        self.assertEqual("#Error", spreadsheet.evaluate("A1"))
+
+    def test_spreadsheet_evaluate_formula_with_circular_reference(self):
+        spreadsheet = SpreadSheet()
+        spreadsheet.set("A1", "=B1")
+        spreadsheet.set("B1", "=A1")
+        self.assertEqual("#Circular", spreadsheet.evaluate("A1"))
