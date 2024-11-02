@@ -21,13 +21,6 @@ class SpreadSheet:
             self._evaluating.remove(cell)
             return int(value)
 
-        try:
-            float(value)
-            self._evaluating.remove(cell)
-            return "#Error"
-        except ValueError:
-            pass
-
         if value.startswith("'") and value.endswith("'"):
             self._evaluating.remove(cell)
             return value[1:-1]
@@ -49,12 +42,28 @@ class SpreadSheet:
                 return result
 
             try:
-                float(formula_value)
-                self._evaluating.remove(cell)
-                return "#Error"
-            except ValueError:
+                return self._evaluate_expression(formula_value)
+            except (ZeroDivisionError, ValueError):
                 self._evaluating.remove(cell)
                 return "#Error"
 
         self._evaluating.remove(cell)
         return "#Error"
+
+    def _evaluate_expression(self, expression: str) -> int:
+        # Replace cell references with their evaluated values
+        for cell in self._cells:
+            if cell in expression:
+                expression = expression.replace(cell, str(self.evaluate(cell)))
+
+        # Check for any non-numeric characters that are not operators
+        if any(char not in '0123456789+-*/%() ' for char in expression):
+            raise ValueError("Invalid characters in expression.")
+
+        try:
+            result = eval(expression)
+            if isinstance(result, float) and not result.is_integer():
+                raise ValueError()  # Raise an error if result is a float
+            return int(result)
+        except (ZeroDivisionError, TypeError, SyntaxError):
+            raise ZeroDivisionError()
